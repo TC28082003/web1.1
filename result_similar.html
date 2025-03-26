@@ -1,0 +1,74 @@
+<html lang="en">
+    <head>
+        <title>Result Similarity</title>
+        <link rel="stylesheet" href="style_table.css">
+    </head>
+    <body>
+        <!-- Ce conteneur accueillera la table chargée depuis localStorage -->
+        <div id="table-container">
+        </div>
+        <br>
+        <button class="button1" onclick="export_en_CSV()">Download result
+        <span class="tooltip">Click here to download result.</span>
+        </button>
+
+        <button class="button1" onclick="return_display()">Back to display
+        <span class="tooltip">Click here to return to display patients.</span>
+        </button>
+
+        <script>
+            let table =[];
+            let profileName = [];
+            // Charger la table depuis localStorage et l'afficher
+            function loadTable() {
+                const table_similarity = localStorage.getItem('table_similarity'); // Récupérer la table depuis le localStorage
+                if (table_similarity) {
+                    document.getElementById('table-container').innerHTML = JSON.parse(table_similarity); // Insérer le contenu dans le DOM
+                }
+
+            }
+            window.addEventListener('message', (event) => {
+            if (event.data && event.data.action === 'updateTable') {
+                // Mettre à jour les valeurs depuis localStorage
+                const updatetable = JSON.parse(localStorage.getItem('table'));
+                const updateprofileName = JSON.parse(localStorage.getItem('profileName'));
+                // Réinitialiser les données globales
+                table = updatetable;
+                profileName = updateprofileName;
+                loadTable()
+            }
+            });
+            table = JSON.parse(localStorage.getItem('table'));
+            profileName = JSON.parse(localStorage.getItem('profileName'));
+            loadTable();
+
+            // Fonction pour exporter la table en CSV
+            function export_en_CSV() {
+                let csvContent = "";
+                const table = document.querySelector("table"); // Sélectionner la table
+                const rows = table.querySelectorAll("tr"); // Récupérer toutes les lignes
+
+                rows.forEach((row, index) => {
+                    let rowData = [];
+                    row.querySelectorAll("th, td").forEach(cell => rowData.push(cell.innerText)); // Récupérer les données des cellules
+                    csvContent += rowData.join(",") + (index < rows.length - 1 ? "\n" : ""); // Ajouter une nouvelle ligne après chaque ligne sauf la dernière
+                });
+
+                let blob = new Blob([csvContent], { type: "text/csv" });
+                let link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `Result_similarity_${profileName}.csv`;
+                link.click();
+            }
+            let similarityWindow = null;
+            function return_display() {
+                let iframe = parent.document.getElementById("content");
+                if (iframe) {
+                    iframe.src = 'similarity.html';
+                } else {
+                    console.error("L'élément #content n'existe pas !");
+                }
+            }
+        </script>
+    </body>
+</html>

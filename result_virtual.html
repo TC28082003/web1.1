@@ -1,0 +1,75 @@
+<html lang="en">
+    <head>
+        <title>Result Virtual Sort</title>
+        <link rel="stylesheet" href="style_table.css">
+    </head>
+    <body>
+        <!-- Ce conteneur accueillera la table chargée depuis localStorage -->
+        <div id="table-container">
+        </div>
+        <br>
+        <button class="button1" onclick="export_en_CSV()">Download result
+        <span class="tooltip">Click here to download result.</span>
+        </button>
+
+        <script>
+            let table =[];
+            let profileName = [];
+            let fullData = [];
+            let headers = [];
+            // Charger la table depuis localStorage et l'afficher
+            function loadTable() {
+                const tableHTML = localStorage.getItem('table'); // Récupérer la table depuis le localStorage
+                if (tableHTML) {
+                    document.getElementById('table-container').innerHTML = JSON.parse(tableHTML); // Insérer le contenu dans le DOM
+                }
+
+            }
+            window.addEventListener('message', (event) => {
+            if (event.data && event.data.action === 'updateTable') {
+                // Mettre à jour les valeurs depuis localStorage
+                const updatetable = JSON.parse(localStorage.getItem('table'));
+                const updateprofileName = JSON.parse(localStorage.getItem('profileName'));
+                const updatefullData = JSON.parse(localStorage.getItem('fullData'));
+                const updateheaders = JSON.parse(localStorage.getItem('headers'));
+                // Réinitialiser les données globales
+                table = updatetable;
+                profileName = updateprofileName;
+                fullData = updatefullData;
+                headers = updateheaders;
+                loadTable()
+            }
+            });
+            table = JSON.parse(localStorage.getItem('table'));
+            profileName = JSON.parse(localStorage.getItem('profileName'));
+            fullData = JSON.parse(localStorage.getItem('fullData'));
+            headers = JSON.parse(localStorage.getItem('headers'));
+            loadTable();
+
+            function export_en_CSV() {
+              // Appeler 'calculer_virtual_sort()' pour obtenir les données
+              const data = fullData;
+              if (!data || data.length === 0) {
+                  console.error("Aucune donnée à exporter");
+                  return;
+              }
+              // Convertir les données en CSV
+              let csvContent = headers.map(header => header).join(",") + "\n";
+              csvContent += data.map(row => row.join(",")).join("\n");
+
+              // Créer un fichier et le télécharger
+              const blob = new Blob([csvContent], { type: "text/csv" });
+              const url = window.URL.createObjectURL(blob);
+
+              // Créer un lien pour le téléchargement
+              const anchor = document.createElement("a");
+              anchor.href = url;
+              anchor.download = `virtual_sort_${profileName}.csv`;
+              anchor.click();
+
+              // Nettoyer l'URL
+              window.URL.revokeObjectURL(url);
+          }
+        </script>
+    </body>
+</html>

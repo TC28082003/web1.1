@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display patients</title>
+    <link rel="stylesheet" href="style_table.css">
+</head>
+<body>
+    <div class="table" id="table"></div>
+    <script src = "similar.js"> </script>
+    <br>
+    <button class="button" onclick="calculer_similarity()">
+    Compute similarity
+        <span class="tooltip" id="tooltip">If no line selected, message : "Please select patients"</span>
+    </button>
+    <button class="button" onclick="virtual_profile()">Explore hypothesis
+        <span class="tooltip" id="tooltip1">If no line selected, message : "Please select patients"</span>
+    </button>
+</body>
+</html>

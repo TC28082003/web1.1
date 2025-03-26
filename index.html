@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+   <img src="Costech.jpg" alt="logo" class="logo">
+    <nav>
+        <a id="home" onclick="loadPage('pagehome.html', 'home')">Page Home</a>
+        <a id="similarity" onclick="loadPage('similarity.html', 'similarity')">Display Patients</a>
+        <a id="result_similar" onclick="loadPage('result_similar.html', 'result_similar')">Result Compute</a>
+        <a id="virtual" onclick="loadPage('virtual.html', 'virtual')">Virtual patients</a>
+        <a id="result_virtual" onclick="loadPage('result_virtual.html', 'result_virtual')">Result Virtual</a>
+    </nav>
+
+    <iframe id="content" src="pagehome.html"></iframe>
+
+    <script>
+        function loadPage(page, buttonId) {
+            // Change the src of the iframe to load the new page
+            document.getElementById("content").src = page;
+
+            // Remove 'active' class from all buttons
+            const buttons = document.querySelectorAll('nav a');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Add 'active' class to the clicked button
+            document.getElementById(buttonId).classList.add('active');
+        }
+
+        // On page load, add 'active' class to the default button
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPage('pagehome.html', 'home');
+        });
+    </script>
+
+</body>
+</html>
