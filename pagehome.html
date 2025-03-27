@@ -38,14 +38,14 @@
         </fieldset>
 
         <div style="margin-top: 20px; text-align: center;">
-            <button class="button1" onclick="Save_profile()">
-                Save selection
+            <button class="button1" onclick="Save_profile()">Save data
+                <span class="tooltip">Save selected columns</span>
             </button>
-            <button class="button1" onclick="delete_profil()">
-                Delete data
+            <button class="button1" onclick="delete_profil()">Delete data
+                <span class="tooltip">Delete a profile or a file</span>
             </button>
-            <button class="button1" onclick="simlilar_profile()">
-                Display patients
+            <button class="button1" onclick="simlilar_profile()">Display patients
+                <span class="tooltip">Displays selected profiles or columns</span>
             </button>
         </div>
         </div>
@@ -130,7 +130,12 @@ function loadSavedData() {
 }
 
 // Appelez cette fonction lorsque la page est chargée
-window.onload = loadSavedData;
+window.onload = function () {
+    loadSavedData(); // Charger les données enregistrées
+    updateFileList(); // Charger la liste des fichiers
+    updatePreviousSelections(); // Charger les profils sélectionnés précédemment
+};
+
 
 // Fonction pour afficher le contenu sous forme de tableau et ajouter le bouton avec le nom du fichier
 function display_list_profiles(contenu, fichier) {
@@ -171,7 +176,23 @@ function display_list_profiles(contenu, fichier) {
     updateFileList();
 }
 
-window.onload = loadSavedData;
+window.onload = function () {
+    loadSavedData(); // Charger les données enregistrées
+    updateFileList(); // Charger la liste des fichiers
+    let lastProfile = localStorage.getItem("lastVisitedProfile");
+    console.log("Last visite: ",lastProfile);
+    if (lastProfile) {
+        let last_profile_parent = lastProfile + "_parent";
+        if(!savedprofilesparent[last_profile_parent]){
+                    display_profile(lastProfile); // 🔹 Restaurer le dernier profil visité
+
+        }
+        else {
+            display_profile(savedprofilesparent[last_profile_parent]);
+        }
+    }
+};
+
 
 // Fonction pour sauvegarder un profil
 function Save_profile() {
@@ -245,7 +266,20 @@ function Save_profile() {
     localStorage.setItem('savedProfiles', JSON.stringify(savedProfiles));
     console.log(savedprofilesparent);
     console.log(savedProfiles);
-    display_profile(profileName);
+    loadSavedData(); // Charger les données enregistrées
+    updateFileList(); // Charger la liste des fichiers
+    let lastProfile = localStorage.getItem("lastVisitedProfile");
+    console.log("Last visite: ",lastProfile);
+    if (lastProfile) {
+        let last_profile_parent = lastProfile + "_parent";
+        if(!savedprofilesparent[last_profile_parent]){
+                    display_profile(lastProfile); // 🔹 Restaurer le dernier profil visité
+
+        }
+        else {
+            display_profile(savedprofilesparent[last_profile_parent]);
+        }
+    }
     Array.from(document.querySelectorAll('input[name="columns"]')).forEach((checkbox) => (checkbox.checked = false));
     alert(`Profile "${profileName}" has been saved successfully!`);
 }
@@ -481,11 +515,22 @@ function simlilar_profile() {
 
     // Charger la page `similarity.html` dans l'iframe de index.html
     let iframe = parent.document.getElementById("content");
-        if (iframe) {
-            iframe.src = 'similarity.html';
-        } else {
-            console.error("L'élément #content n'existe pas !");
+    if (iframe) {
+        iframe.src = 'similarity.html';
+
+        // Supprimer la classe active de tous les boutons de navigation
+        let navLinks = parent.document.querySelectorAll("nav a");
+        navLinks.forEach(link => link.classList.remove("active"));
+
+        // Ajouter la classe active au bouton "Display Patients"
+        let similarityButton = parent.document.getElementById("similarity");
+        if (similarityButton) {
+            similarityButton.classList.add("active");
         }
+
+    } else {
+        console.error("L'élément #content n'existe pas !");
+    }
 }
 
 

@@ -182,7 +182,7 @@ function add_virtual_profile() {
                 return;
             }
             if (!virtualListContainer) {
-                console.error("Container for profile list ('fileListContainer') not found!");
+                console.error("Container for profile list ('virtualListContainer') not found!");
                 return;
             }
             // Nettoyer le conteneur pour éviter les doublons
@@ -427,14 +427,24 @@ console.log(virtualProfilesData);
         localStorage.setItem('table', JSON.stringify(table));
         localStorage.setItem('profileName', JSON.stringify(profileName));
         localStorage.setItem('fullData', JSON.stringify(fullData));
-        // Vérifier si la fenêtre `display.html` est déjà ouverte
-            // Charger la page `similarity.html` dans l'iframe de index.html
+
     let iframe = parent.document.getElementById("content");
-        if (iframe) {
-            iframe.src = 'result_virtual.html';
-        } else {
-            console.error("L'élément #content n'existe pas !");
+    if (iframe) {
+        iframe.src = 'result_virtual.html';
+
+        // Supprimer la classe active de tous les boutons de navigation
+        let navLinks = parent.document.querySelectorAll("nav a");
+        navLinks.forEach(link => link.classList.remove("active"));
+
+        // Ajouter la classe active au bouton "Display Patients"
+        let result_virtualButton = parent.document.getElementById("result_virtual");
+        if (result_virtualButton) {
+            result_virtualButton.classList.add("active");
         }
+
+    } else {
+        console.error("L'élément #content n'existe pas !");
+    }
     }
 
         document.addEventListener("DOMContentLoaded", () => {

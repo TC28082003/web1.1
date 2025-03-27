@@ -178,12 +178,23 @@ function calculer_similarity() {
     table_similarity += "</tbody></table></div>";
     localStorage.setItem('profileName', JSON.stringify(profileName));
     localStorage.setItem('table_similarity', JSON.stringify(table_similarity)); // Avec un 'I' majuscule    // Vérifier si la fenêtre `display.html` est déjà ouverte
-        let iframe = parent.document.getElementById("content");
-        if (iframe) {
-            iframe.src = 'result_similar.html';
-        } else {
-            console.error("L'élément #content n'existe pas !");
+    let iframe = parent.document.getElementById("content");
+    if (iframe) {
+        iframe.src = 'result_similar.html';
+
+        // Supprimer la classe active de tous les boutons de navigation
+        let navLinks = parent.document.querySelectorAll("nav a");
+        navLinks.forEach(link => link.classList.remove("active"));
+
+        // Ajouter la classe active au bouton "Display Patients"
+        let result_similarButton = parent.document.getElementById("result_similar");
+        if (result_similarButton) {
+            result_similarButton.classList.add("active");
         }
+
+    } else {
+        console.error("L'élément #content n'existe pas !");
+    }
 }
 
 
@@ -215,11 +226,22 @@ function virtual_profile() {
 
     // Charger la page `similarity.html` dans l'iframe de index.html
     let iframe = parent.document.getElementById("content");
-        if (iframe) {
-            iframe.src = 'virtual.html';
-        } else {
-            console.error("L'élément #content n'existe pas !");
+    if (iframe) {
+        iframe.src = 'virtual.html';
+
+        // Supprimer la classe active de tous les boutons de navigation
+        let navLinks = parent.document.querySelectorAll("nav a");
+        navLinks.forEach(link => link.classList.remove("active"));
+
+        // Ajouter la classe active au bouton "Display Patients"
+        let virtualButton = parent.document.getElementById("virtual");
+        if (virtualButton) {
+            virtualButton.classList.add("active");
         }
+
+    } else {
+        console.error("L'élément #content n'existe pas !");
+    }
 }
 
 
