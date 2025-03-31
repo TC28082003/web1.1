@@ -2,37 +2,97 @@
         let selectedColumns = [];
         let data_transform = [];
         let profileName = null;
+        let currentlySortingColumnIndex = -1; // To store which column index we are sorting
+
         // Afficher le tableau
         function cleanProfileName(name) {
             // Replace unwanted characters " and \ with an empty string
             return name.replace(/["\\]/g, '');
         }
+
+        function hideSortOptions() {
+            const popup = document.getElementById('sortOptionsPopup');
+            if (popup) {
+                popup.style.display = 'none';
+            }
+            currentlySortingColumnIndex = -1;
+        }
+
+        function showSortOptions(columnIndex, event) {
+            if (event.target.tagName === 'INPUT') {
+                 return;
+            }
+
+            const popup = document.getElementById('sortOptionsPopup');
+            const columnNameElement = document.getElementById('sortColumnName');
+            if (!popup || !columnNameElement || columnIndex < 0 || !data_transform[0]) return;
+
+            // Get the actual column index from the original data structure
+            const actualColIndex = selectedColumns[columnIndex]; // Map displayed index to original data index
+            const columnName = data_transform[0][actualColIndex];
+
+            currentlySortingColumnIndex = actualColIndex;
+            columnNameElement.textContent = columnName;
+
+            const rect = event.currentTarget.getBoundingClientRect();
+            popup.style.left = `${window.scrollX + rect.left}px`;
+            popup.style.top = `${window.scrollY + rect.bottom}px`; // Position below the header
+            popup.style.display = 'block';
+
+        }
         console.log(profileName);
         function afficherTableau() {
-            profileName = cleanProfileName(profileName);
-            console.log("Data: ",data_transform);
-            let table = `<h1><P></P> ${profileName}</h1><table><thead><tr>`;
-            table += "<th>Select lines</th>";
+            if (profileName) { // Only clean if it exists
+                profileName = cleanProfileName(profileName);
+            }
+            console.log("Data for display: ", data_transform);
+            console.log("Selected columns for display:", selectedColumns);
 
-            // Ajouter une ligne de cases à cocher pour les colonnes
-            selectedColumns.forEach((colIndex) => {
-                table += `<th><input type='checkbox' class='columnSelect' value='${colIndex}'> ${data_transform[0][colIndex]}</th>`;
+            let tableHtml = `<h1><P></P> ${profileName || 'No Profile'}</h1><table><thead><tr>`;
+            tableHtml += "<th>Select lines</th>"; // Non-sortable header
+
+            // Add header cells with click listeners for sorting
+            selectedColumns.forEach((originalColIndex, displayIndex) => {
+                // Ensure header row (data_transform[0]) exists and has the column
+                const headerText = (data_transform[0] && data_transform[0][originalColIndex] !== undefined)
+                                   ? data_transform[0][originalColIndex]
+                                   : `Column ${originalColIndex}`;
+
+                // Added onclick directly here for simplicity, passing displayIndex
+                // Pass 'event' to get positioning info
+                tableHtml += `<th onclick="showSortOptions(${displayIndex}, event)">`; // Pass the DISPLAY index
+                tableHtml += `<input type='checkbox' class='columnSelect' value='${originalColIndex}' onclick="event.stopPropagation();"> `; // Stop propagation on checkbox click
+                tableHtml += `${headerText}</th>`;
             });
 
-            table += "</tr></thead><tbody>";
+            tableHtml += "</tr></thead><tbody>";
 
-
-            // Des valeurs pour chaque colonne
-            for (let i = 1; i < data_transform.length; i++) {
-                table += "<tr>";
-                table += `<td><input type='checkbox' class='rowSelect' value='${i}'></td>`;
-                selectedColumns.forEach(colIndex => {
-                    table += `<td>${data_transform[i][colIndex]}</td>`;
-                });
-                table += "</tr>";
+            // Check if data_transform has data rows
+            if (data_transform.length > 1) {
+                // Data rows
+                for (let i = 1; i < data_transform.length; i++) {
+                    tableHtml += "<tr>";
+                    tableHtml += `<td><input type='checkbox' class='rowSelect' value='${i}'></td>`;
+                    selectedColumns.forEach(originalColIndex => {
+                         // Handle potential undefined cells gracefully
+                        const cellData = (data_transform[i] && data_transform[i][originalColIndex] !== undefined)
+                                       ? data_transform[i][originalColIndex]
+                                       : '';
+                        tableHtml += `<td>${cellData}</td>`;
+                    });
+                    tableHtml += "</tr>";
+                }
+            } else {
+                // Optional: Message if no data rows
+                const colCount = selectedColumns.length + 1; // +1 for the select lines column
+                 tableHtml += `<tr><td colspan="${colCount}">No data rows available.</td></tr>`;
             }
-            table += "</tbody></table>";
-            document.getElementById('table').innerHTML = table;
+
+            tableHtml += "</tbody></table>";
+            document.getElementById('table').innerHTML = tableHtml;
+
+            // Hide sort options popup whenever table is redrawn
+            hideSortOptions();
         }
         function getTableData() {
                 let tableData = [];
@@ -54,6 +114,70 @@
                 });
                 return tableData;
         }
+        // --- Sorting Logic ---
+
+    /**
+     * Compares two values for sorting. Handles numbers and strings.
+     * @param {*} a First value
+     * @param {*} b Second value
+     * @param {boolean} ascending True for ascending, false for descending
+     * @returns {number} -1, 0, or 1 for sort comparison
+     */
+    function compareValues(a, b, ascending = true) {
+        const valA = a === null || a === undefined ? '' : a;
+        const valB = b === null || b === undefined ? '' : b;
+
+        // Attempt numeric comparison first
+        const numA = parseFloat(valA);
+        const numB = parseFloat(valB);
+
+        let comparison = 0;
+
+        if (!isNaN(numA) && !isNaN(numB)) {
+            // Both are numbers
+            comparison = numA - numB;
+        } else {
+            // At least one is not a number, use string comparison
+            const strA = String(valA).toLowerCase(); // Case-insensitive string comparison
+            const strB = String(valB).toLowerCase();
+            comparison = strA.localeCompare(strB);
+        }
+
+        return ascending ? comparison : comparison * -1; // Reverse for descending
+    }
+
+    /**
+     * Sorts the data_transform array based on the currently selected column and sort type.
+     * @param {'asc' | 'desc'} sortType - The type of sorting ('asc' for ascending, 'desc' for descending)
+     */
+    function simple_sort(sortType) {
+        console.log(`Sorting column index: ${currentlySortingColumnIndex}, type: ${sortType}`);
+        if (currentlySortingColumnIndex === -1 || !data_transform || data_transform.length < 2) {
+            console.log("Sorting prerequisites not met.");
+            hideSortOptions();
+            return; // No column selected or no data/header to sort
+        }
+
+        // Separate header row from data rows
+        const headerRow = data_transform[0];
+        let dataRows = data_transform.slice(1);
+
+        // Perform the sort on dataRows
+        const ascending = (sortType === 'asc');
+        dataRows.sort((rowA, rowB) => {
+            // Ensure rows and the specific cell exist before comparing
+            const valA = rowA && rowA[currentlySortingColumnIndex] !== undefined ? rowA[currentlySortingColumnIndex] : null;
+            const valB = rowB && rowB[currentlySortingColumnIndex] !== undefined ? rowB[currentlySortingColumnIndex] : null;
+            return compareValues(valA, valB, ascending);
+        });
+
+        // Recombine header and sorted data rows
+        data_transform = [headerRow, ...dataRows];
+
+        // Update the displayed table
+        afficherTableau(); // This will also hide the popup
+    }
+
             // Écouter les messages de la fenêtre parent
         window.addEventListener('message', (event) => {
             if (event.data && event.data.action === 'updateTable') {
@@ -71,11 +195,27 @@
                 afficherTableau();
             }
         });
-        // Initier le tableau lors du premier chargement
-        selectedColumns = JSON.parse(localStorage.getItem('selectedColumns')) || [];
-        data_transform = JSON.parse(localStorage.getItem('data_transform')) || [];
-        profileName = localStorage.getItem('profileName') || '';
-        afficherTableau();
+        document.addEventListener('DOMContentLoaded', () => {
+            const sortAscBtn = document.getElementById('sortAscButton');
+            const sortDescBtn = document.getElementById('sortDescButton');
+            const closePopupBtn = document.getElementById('closeSortPopup');
+            if (sortAscBtn) {
+                sortAscBtn.addEventListener('click', () => simple_sort('asc'));
+            }
+            if (sortDescBtn) {
+                sortDescBtn.addEventListener('click', () => simple_sort('desc'));
+            }
+            if (closePopupBtn) { // <-- Add listener for the 'x' button
+                closePopupBtn.addEventListener('click', hideSortOptions); // Reuse the existing hide function
+            }
+            // Initial load from localStorage and display table
+            selectedColumns = JSON.parse(localStorage.getItem('selectedColumns')) || [];
+            data_transform = JSON.parse(localStorage.getItem('data_transform')) || [];
+            profileName = localStorage.getItem('profileName') || '';
+            console.log("Initial load - Columns:", selectedColumns);
+            console.log("Initial load - Data:", data_transform);
+            afficherTableau();
+        });
 
         // Fonction pour calculer la distance Euclidienne entre deux vecteurs
         function euclideanDistance(vec1, vec2) {

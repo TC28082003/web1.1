@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="style_table.css">
 </head>
 <body>
+    <div id="sortOptionsPopup" style="display: none; position: absolute; border: 1px solid #ccc; background-color: dodgerblue; padding: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); z-index: 10;">
+        <span id="closeSortPopup" class="close-button" title="Close"><img src="close-icon.png" alt="Close"></span>
+        <p>Sort options for:</p>
+        <p><strong id="sortColumnName"></strong></p>
+        <button id="sortAscButton">Sort Ascending (Min first)</button><br>
+        <button id="sortDescButton">Sort Descending (Max first)</button><br>
+    </div>
     <div class="table" id="table"></div>
     <script src = "similar.js"> </script>
     <br>

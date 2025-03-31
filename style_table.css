@@ -6,6 +6,47 @@ body {
     text-align: center;
     font-size: 0.9em;
 }
+#sortOptionsPopup {
+    display: none; /* Hidden by default */
+    position: absolute; /* Positioned relative to the page or nearest positioned ancestor */
+    border: 1px solid #ccc;
+    background-color: white;
+    padding: 15px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    z-index: 10; /* Make sure it's above other elements */
+    min-width: 180px; /* Ensure enough space for buttons */
+}
+
+#closeSortPopup img {
+    display: block; /* Prevents extra space below the image */
+    width: 18px;    /* Set desired width */
+    height: 18px;   /* Set desired height */
+}
+
+#sortOptionsPopup p {
+    margin: 0 0 10px 0;
+}
+
+#sortOptionsPopup button {
+    margin-top: 5px;
+    padding: 5px 10px;
+    width: 100%; /* Make buttons fill the width */
+    cursor: pointer;
+}
+#closeSortPopup {
+    position: absolute; /* Position relative to the popup */
+    top: 5px;         /* Distance from the top edge */
+    right: 10px;        /* Distance from the right edge */
+    font-size: 1.4em;   /* Make it a bit larger */
+    font-weight: bold;
+    color: #555;       /* Dim color */
+    cursor: pointer;
+    line-height: 1;   /* Adjust line height for better vertical centering */
+}
+
+#closeSortPopup:hover {
+    color: #000;       /* Darken on hover */
+}
 table {
     border-collapse: collapse;
     width: 80%;
@@ -16,6 +57,11 @@ table {
     overflow-y: auto;
     border-radius: 10px;
     border: 5px dashed #999;
+}
+thead{
+    position: sticky;
+    top:0;
+    z-index:1;
 }
 th, td {
     border: 1px solid black;

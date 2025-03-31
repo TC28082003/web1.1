@@ -39,13 +39,10 @@
 
         <div style="margin-top: 20px; text-align: center;">
             <button class="button1" onclick="Save_profile()">Save data
-                <span class="tooltip">Save selected columns</span>
             </button>
             <button class="button1" onclick="delete_profil()">Delete data
-                <span class="tooltip">Delete a profile or a file</span>
             </button>
             <button class="button1" onclick="simlilar_profile()">Display patients
-                <span class="tooltip">Displays selected profiles or columns</span>
             </button>
         </div>
         </div>
@@ -133,7 +130,6 @@ function loadSavedData() {
 window.onload = function () {
     loadSavedData(); // Charger les données enregistrées
     updateFileList(); // Charger la liste des fichiers
-    updatePreviousSelections(); // Charger les profils sélectionnés précédemment
 };
 
 
