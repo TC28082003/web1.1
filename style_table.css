@@ -4,7 +4,7 @@ body {
     padding: 20px;
     background-color: #f4f4f4;
     text-align: center;
-    font-size: 0.9em;
+    font-size: 14px;
 }
 #sortOptionsPopup {
     display: none; /* Hidden by default */
@@ -37,7 +37,7 @@ body {
     position: absolute; /* Position relative to the popup */
     top: 5px;         /* Distance from the top edge */
     right: 10px;        /* Distance from the right edge */
-    font-size: 1.4em;   /* Make it a bit larger */
+    font-size: 14px;   /* Make it a bit larger */
     font-weight: bold;
     color: #555;       /* Dim color */
     cursor: pointer;
@@ -68,6 +68,11 @@ th, td {
     padding: 8px;
     text-align: left;
 }
+tr.virtual-row td {
+  color: red;
+  font-weight: bold;
+}
+
 th {
     background-color: #007bff;
     color: white;
@@ -77,7 +82,7 @@ tr:nth-child(even) {
 }
 /* Légende principale */
 legend {
-    font-size: 1.2rem;
+    font-size: 14px;
     font-weight: bold;
     color: #007bff;
     padding: 5px 10px;
@@ -112,7 +117,7 @@ legend {
 }
         /* Style pour le bouton */
         .button {
-            font-size: 16px;
+            font-size: 14px;
             transition: all 0.3s ease-in-out;
             text-align: center;
             position: relative;
@@ -120,13 +125,13 @@ legend {
             color: white;
             border: none;
             cursor: pointer;
-            height: 45px;
+            height: 30px;
             width: 15%;
             border-radius: 30px;
         }
 
         .button1 {
-            font-size: 16px;
+            font-size: 14px;
             transition: all 0.3s ease-in-out;
             text-align: center;
             position: relative;
@@ -134,13 +139,13 @@ legend {
             color: white;
             border: none;
             cursor: pointer;
-            height: 45px;
+            height: 30px;
             width: 15%;
             border-radius: 30px;
         }
 
         .button2 {
-            font-size: 16px;
+            font-size: 14px;
             transition: all 0.3s ease-in-out;
             text-align: center;
             position: relative;
@@ -148,14 +153,14 @@ legend {
             color: white;
             border: none;
             cursor: pointer;
-            height: 45px;
+            height: 30px;
             width: 15%;
             border-radius: 30px;
         }
             /* Media query for tablets */
     @media (max-width: 1000px) {
         .button {
-            width: 25%; /* Increase button width for tablets */
+            width: 20%; /* Increase button width for tablets */
         }
         .button1{
             width: 25%;
@@ -166,24 +171,24 @@ legend {
     }
 
     /* Media query for mobile devices */
-    @media (max-width: 700px) {
+    @media (max-width: 770px) {
         .button {
             width: 30%; /* Increase button width for mobile */
             height: 40px; /* Slightly smaller height */
             margin: 5px 0;
-            font-size: 13px;
+            font-size: 14px;
         }
         .button1 {
             width: 30%; /* Increase button width for mobile */
             height: 40px; /* Slightly smaller height */
             margin: 5px 0;
-            font-size: 13px;
+            font-size: 14px;
         }
         .button2 {
                 width: 40%; /* Increase button width for mobile */
                 height: 40px; /* Slightly smaller height */
                 margin: 5px 0;
-                font-size: 13px;
+                font-size: 14px;
         }
     }
 
@@ -192,13 +197,13 @@ legend {
                 width: 50%; /* Increase button width for mobile */
                 height: 40px; /* Slightly smaller height */
                 margin: 5px 0;
-                font-size: 13px;
+                font-size: 14px;
             }
             .button2 {
                 width: 49%; /* Increase button width for mobile */
                 height: 40px; /* Slightly smaller height */
                 margin: 5px 0;
-                font-size: 13px;
+                font-size: 14px;
             }
         }
 
@@ -207,7 +212,7 @@ legend {
                 width: 49%; /* Increase button width for mobile */
                 height: 40px; /* Slightly smaller height */
                 margin: 5px 0;
-                font-size: 13px;
+                font-size: 14px;
             }
         }
 
@@ -253,7 +258,7 @@ input[type="text"] {
     border: 1px solid #ccc; /* Bordure grise claire */
     border-radius: 4px; /* Coins arrondis */
     box-sizing: border-box; /* Inclut le padding et la bordure dans la largeur totale */
-    font-size: 12px; /* Taille de police */
+    font-size: 11px; /* Taille de police */
     transition: border-color 0.3s; /* Transition douce pour le changement de couleur de bordure */
 }
 

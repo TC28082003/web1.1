@@ -3,45 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Navigation</title>
+    <title>Navigation App</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <nav>
-        <img src="Costech.jpg" alt="logo" class="logo">
-        <a id="home" onclick="loadPage('pagehome.html', 'home')">Page Home</a>
-        <a id="similarity" onclick="loadPage('similarity.html', 'similarity')">Display Patients</a>
-        <a id="result_similar" onclick="loadPage('result_similar.html', 'result_similar')">Result Compute</a>
-        <a id="virtual" onclick="loadPage('virtual.html', 'virtual')">Virtual patients</a>
-        <a id="result_virtual" onclick="loadPage('result_virtual.html', 'result_virtual')">Result Virtual</a>
+        <!-- Logo is now a direct child -->
+        <img src="Costech.jpg" alt="Costech Logo" class="logo">
+
+        <!-- Container for the main page links -->
+        <div class="nav-links-container">
+            <a id="home" data-page="pagehome.html" onclick="loadPage(this)" title="Main Home" class="main-nav hidden">Home</a>
+            <a id="similarity" data-page="similarity.html" onclick="loadPage(this)" title="The data of the columns you select will be displayed here" class="main-nav hidden">Display Patients</a>
+            <a id="result_similar" data-page="result_similar.html" onclick="loadPage(this)" title=" Your result of compute closest will display here" class="main-nav hidden">Compute Closest</a>
+            <a id="virtual" data-page="virtual.html" onclick="loadPage(this)" title="You can set your virtual patients here" class="main-nav hidden">Select values</a>
+            <a id="result_virtual" data-page="result_virtual.html" onclick="loadPage(this)" title="The result of your compute virtual patients will display here" class="main-nav hidden">Explore Hypothesis</a>
+        </div>
+
+        <!-- Container for user-specific controls -->
+        <div class="user-controls">
+            <span id="loggedInUserDisplay" class="hidden"></span>
+            <a id="logoutLink" onclick="logout()" class="hidden">Logout</a>
+        </div>
     </nav>
 
-    <iframe id="content" src="pagehome.html"></iframe>
+
+    <!-- The iframe where content pages will be loaded -->
+    <iframe id="content" src="login.html" name="contentFrame"></iframe>
 
     <script>
-        function loadPage(page, id) {
-            let iframe = document.getElementById("content");
-            if (iframe) {
-                iframe.src = page;
+        const contentFrame = document.getElementById("content");
+        const mainNavLinks = document.querySelectorAll("nav a.main-nav");
+        const logoutLink = document.getElementById("logoutLink");
+        const loggedInUserDisplay = document.getElementById("loggedInUserDisplay");
 
-                // Supprimer la classe active de tous les boutons de navigation
-                let navLinks = document.querySelectorAll("nav a");
-                navLinks.forEach(link => link.classList.remove("active"));
+        /**
+         * Updates the visibility of navigation elements based on login status.
+         * @param {boolean} isLoggedIn - Whether the user is currently logged in.
+         */
+        function setNavState(isLoggedIn) {
+            const loggedInUser = sessionStorage.getItem('loggedInUser'); // Use sessionStorage for login status
+            console.log(`Setting nav state: isLoggedIn=${isLoggedIn}, user=${loggedInUser}`);
 
-                // Ajouter la classe active au bouton cliqué
-                let activeButton = document.getElementById(id);
-                if (activeButton) {
-                    activeButton.classList.add("active");
+            mainNavLinks.forEach(link => link.classList.toggle('hidden', !isLoggedIn));
+            logoutLink.classList.toggle('hidden', !isLoggedIn);
+            loggedInUserDisplay.classList.toggle('hidden', !isLoggedIn);
+
+             if (isLoggedIn && loggedInUser) {
+                 loggedInUserDisplay.textContent = `User: ${loggedInUser}`;
+             } else {
+                 loggedInUserDisplay.textContent = '';
+             }
+        }
+
+        /**
+         * Loads a page into the iframe and ensures the 'setUser' message is sent.
+         * Handles navigation link styling.
+         * @param {HTMLAnchorElement} linkElement - The navigation link element that was clicked or identified.
+         */
+        function loadPage(linkElement) {
+            if (!linkElement) {
+                console.error("loadPage called without a valid link element.");
+                return;
+            }
+            const page = linkElement.getAttribute('data-page');
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+
+            // Check if trying to access a protected page while logged out
+            if (!isLoggedIn && page !== 'login.html' && linkElement.classList.contains('main-nav')) {
+                console.log("Access denied. User not logged in. Redirecting to login.");
+                contentFrame.src = 'login.html';
+                setNavState(false); // Ensure nav reflects logged-out state
+                mainNavLinks.forEach(link => link.classList.remove("active")); // Clear active state
+                return;
+            }
+
+            if (contentFrame && page) {
+                console.log(`Requesting to load page: ${page}`);
+
+                 // --- IMPORTANT: Attach onload BEFORE setting src ---
+                 // This ensures the handler is ready when the iframe finishes loading.
+                 contentFrame.onload = () => {
+                     console.log(`Iframe finished loading: ${page}`);
+                     const currentUser = sessionStorage.getItem('loggedInUser');
+                     // Send 'setUser' message only if logged in and target is not login page
+                     if (currentUser && page !== 'login.html' && contentFrame.contentWindow) {
+                         console.log(`Notifying iframe ${page} that user is ${currentUser}`);
+                         contentFrame.contentWindow.postMessage({ action: 'setUser', username: currentUser }, '*'); // Use specific origin in production
+                     } else {
+                        console.log(`Not sending 'setUser' to ${page} (User: ${currentUser})`);
+                     }
+                     // Prevent this specific onload from firing again if the iframe content reloads itself
+                     contentFrame.onload = null;
+                 };
+                 // --- END IMPORTANT ---
+
+                // Now set the source, triggering the load and eventually the onload handler
+                contentFrame.src = page;
+
+                // Update navigation link styles
+                mainNavLinks.forEach(link => link.classList.remove("active"));
+                // Add 'active' class only to main navigation links (not login/logout)
+                if (linkElement.classList.contains('main-nav')) {
+                    linkElement.classList.add("active");
                 }
-            } else {
-                console.error("L'élément #content n'existe pas !");
+
+            } else if (page !== 'login.html') { // Don't log error for login page case handled above
+                console.error("Iframe #content not found or page attribute missing!");
             }
         }
+
+        /**
+         * Handles successful login event triggered by a message from login.html.
+         * @param {string} username - The username of the logged-in user.
+         */
+        function onLoginSuccess(username) {
+             console.log(`Login successful message received for: ${username}`);
+             // Store login state in sessionStorage (clears on browser close)
+             sessionStorage.setItem('isLoggedIn', 'true');
+             sessionStorage.setItem('loggedInUser', username);
+
+             setNavState(true); // Update nav bar visibility
+
+             const homeLink = document.getElementById('home');
+             if (homeLink) {
+                 console.log("Loading home page after login...");
+                 loadPage(homeLink); // Load the default home page
+             } else {
+                 console.error("Home link (id='home') not found after login.");
+                 // Fallback: maybe load 'about:blank' or show an error
+                 contentFrame.src = 'about:blank';
+             }
+        }
+
+        /**
+         * Handles user logout. Clears session, updates UI, loads login page.
+         */
+        function logout() {
+            const loggedInUser = sessionStorage.getItem('loggedInUser'); // Get user before clearing
+            console.log(`User logging out: ${loggedInUser}`);
+
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('loggedInUser');
+
+            // ** IMPORTANT: Do NOT clear localStorage here **
+            // User-specific data (like saved profiles) should persist for their next login.
+
+            setNavState(false); // Update nav to logged-out state
+            mainNavLinks.forEach(link => link.classList.remove("active")); // Clear active state
+
+            console.log("Loading login page after logout...");
+            contentFrame.src = 'login.html'; // Load login page (no need for loadPage, won't send setUser)
+
+            console.log(`User ${loggedInUser} logged out. Their localStorage data remains.`);
+        }
+
+        /**
+         * Listens for messages from child iframes (login status, navigation requests).
+         */
+        window.addEventListener('message', (event) => {
+             // TODO: Add origin check for security in production
+             // if (event.origin !== 'your-expected-origin') {
+             //    console.warn("Message received from unexpected origin:", event.origin);
+             //    return;
+             // }
+
+            if (!event.data || !event.data.action) {
+                // Ignore messages without an action
+                return;
+            }
+
+            console.log("Message received from iframe:", event.data);
+
+            switch(event.data.action) {
+                case 'loginSuccess':
+                    // login.html is informing us of successful login
+                     onLoginSuccess(event.data.username);
+                    break;
+                case 'requestNavigation':
+                    // An iframe (like pagehome.html) is asking us to navigate
+                    const targetPage = event.data.targetPage;
+                    const targetId = event.data.targetId; // Get the ID of the link element
+                    const linkElement = document.getElementById(targetId);
+
+                    if (linkElement && linkElement.getAttribute('data-page') === targetPage) {
+                         // Use the existing loadPage function, passing the corresponding nav link
+                         console.log(`Processing navigation request to ${targetPage} via link #${targetId}`);
+                         loadPage(linkElement);
+                    } else {
+                        console.error(`Navigation request failed: Could not find link element with id '${targetId}' for page '${targetPage}' or data-page mismatch.`);
+                        // Optional Fallback: might just load the page without styling/messaging
+                        // contentFrame.src = targetPage;
+                    }
+                    break;
+                // Add other message actions if needed
+                default:
+                    console.log("Received unhandled message action:", event.data.action);
+            }
+        });
+
+        /**
+         * Initial setup when the main index page loads or is refreshed.
+         * Checks login state and loads the appropriate initial iframe content.
+         */
         window.onload = function () {
-            loadPage('pagehome.html', 'home'); // Charge la page home et active l'onglet
+            console.log("Index page loaded. Initializing...");
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+            const currentUser = sessionStorage.getItem('loggedInUser');
+            setNavState(isLoggedIn); // Set initial nav visibility
+
+            const currentIframeSrc = contentFrame.getAttribute('src'); // Get initial src or src after refresh
+            const currentIframePage = currentIframeSrc ? currentIframeSrc.split('/').pop() : null;
+            console.log(`Initial check: isLoggedIn=${isLoggedIn}, user=${currentUser}, currentIframePage=${currentIframePage}`);
+
+            if (isLoggedIn) {
+                 const homeLink = document.getElementById('home');
+                 if (!homeLink) {
+                    console.error("CRITICAL: Home link (id='home') not found on initial load!");
+                    contentFrame.src = 'about:blank'; // Prevent loading anything sensible
+                    return;
+                 }
+
+                 let needsInitialLoad = true;
+
+                 // Check if a valid main page is already loaded (e.g., after refresh)
+                 if (currentIframePage && currentIframePage !== 'login.html') {
+                     let isKnownMainPage = false;
+                     mainNavLinks.forEach(link => {
+                         if(link.getAttribute('data-page') === currentIframePage) {
+                             isKnownMainPage = true;
+                             console.log(`Page ${currentIframePage} seems already loaded. Activating link and ensuring user context.`);
+                             link.classList.add('active'); // Activate the correct link
+
+                             // IMPORTANT: Even on refresh, we need to ensure the iframe gets the user context
+                             // Attach onload to send message AFTER the iframe reloads
+                             contentFrame.onload = () => {
+                                 if (currentUser && contentFrame.contentWindow) {
+                                     console.log(`Notifying refreshed iframe ${currentIframePage} that user is ${currentUser}`);
+                                     contentFrame.contentWindow.postMessage({ action: 'setUser', username: currentUser }, '*');
+                                 }
+                                 contentFrame.onload = null; // Reset handler
+                             };
+                             needsInitialLoad = false; // Don't force load home page
+                         }
+                     });
+                      if (!isKnownMainPage) {
+                          console.log(`Current iframe page ${currentIframePage} is not a known main page. Will load home.`);
+                           needsInitialLoad = true; // Load home if current page isn't recognized
+                      }
+                 }
+
+                 // If no valid page is loaded, or it was login.html, load the home page
+                 if (needsInitialLoad || currentIframePage === 'login.html') {
+                    console.log("Loading initial page (home) for logged-in user.");
+                    loadPage(homeLink);
+                 }
+
+            } else {
+                 // Not logged in, ensure login page is shown
+                 console.log("User not logged in. Ensuring login page is loaded.");
+                 if (currentIframePage !== 'login.html') {
+                    contentFrame.src = 'login.html'; // Directly set src, no 'setUser' needed
+                 }
+                 mainNavLinks.forEach(link => link.classList.remove("active")); // Ensure no active links
+            }
+            console.log("Index page initialization complete.");
         };
-
     </script>
-
 </body>
 </html>

@@ -15,43 +15,94 @@
         let profileName = '';
         let selectedRows = [];
         let data_transform = [];
-
-      // Écouter les messages de la fenêtre parent
-        window.addEventListener('message', (event) => {
-            if (event.data && event.data.action === 'updateTable') {
-                // Mettre à jour les valeurs depuis localStorage
-                const updatedCols = JSON.parse(localStorage.getItem('selectedCols')) || [];
-                const updatedRows = JSON.parse(localStorage.getItem('selectedRows')) || [];
-                const updatedRow = JSON.parse(localStorage.getItem('rows')) || [];
-                const updatedProfileName = localStorage.getItem('profileName') || '';
-                const updateddata_transform = JSON.parse(localStorage.getItem('data_transform')) || [];
-                // Réinitialiser les données globales
-                selectedCols.length = 0;
-                selectedCols.push(...updatedCols);
-                selectedRows.length = 0;
-                selectedRows.push(...updatedRows);
-                rows.length = 0;
-                rows.push(...updatedRow);
-                profileName = updatedProfileName;
-                data_transform.length = 0;
-                data_transform.push(...updateddata_transform);
-                // Mettre à jour le tableau
-                enter_virtual_chiffre();
+        let currentUsername  = null; // Stores the current user
+// --- Helper functions for user-specific localStorage (Corrected Version) ---
+            function getUserStorageKey(baseKey) {
+                if (!currentUsername) {
+                    return null;
+                }
+                return `${currentUsername}_${baseKey}`;
             }
-            display_virtual_profile(profileName);
-        });
 
-        // Initier le tableau lors du premier chargement
-        selectedCols = JSON.parse(localStorage.getItem('selectedCols')) || [];
-        selectedRows = JSON.parse(localStorage.getItem('selectedRows')) || [];
-        rows = JSON.parse(localStorage.getItem('rows')) || [];
-        profileName = JSON.parse(localStorage.getItem('profileName')) || '';
-        data_transform = JSON.parse(localStorage.getItem('data_transform')) || [];
-        enter_virtual_chiffre()
-        console.log(data_transform);
-        // Afficher les profils virtuels après le chargement initial
-        display_virtual_profile(profileName);
+            function setUserItem(baseKey, value) {
+                const userKey = getUserStorageKey(baseKey);
+                if (userKey) {
+                    try {
+                        localStorage.setItem(userKey, JSON.stringify(value));
+                        console.log(`Saved to localStorage [${userKey}]`);
+                    } catch (e) {
+                        console.error(`Error saving to localStorage [${userKey}]:`, e);
+                        alert("Error saving data. Storage might be full.");
+                    }
+                }
+            }
 
+        function getUserItem(baseKey, defaultValue = null) {
+            const userKey = getUserStorageKey(baseKey);
+            if (!userKey) return defaultValue;
+            try {
+                const item = localStorage.getItem(userKey);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (e) {
+                console.error(`Error parsing user item ${userKey}:`, e);
+                return defaultValue;
+            }
+        }
+
+            // --- End Helper Functions ---
+
+            // Function to initialize the page after user context is known
+            function initializePageVirtual() {
+                if (!currentUsername) {
+                    console.error("Cannot initialize page: Username not set.");
+                    document.getElementById('table').innerHTML = "<h2>Error: User context not loaded. Please try reloading or logging in again.</h2>";
+                    document.getElementById('downloadButton').disabled = true;
+                    return;
+                }
+                console.log(`Initializing result page for user: ${currentUsername}`);
+                selectedCols = getUserItem('selectedCols',[]);
+                rows = getUserItem('rows',[]);
+                profileName = getUserItem('profileName','');
+                selectedRows = getUserItem('selectedRows',[]);
+                data_transform = getUserItem('data_transform',[]);
+
+                virtualProfiles = getUserItem('virtualProfiles', {});       // Load the saved profiles list/data
+                virtualProfilesData = getUserItem('virtualProfilesData', {}); // Load the associated metadata
+                console.log("Loaded virtual profiles:", virtualProfiles);
+                console.log("Loaded virtual profiles data:", virtualProfilesData);
+                // Check if the HTML content string exists and is not empty
+                if (!data_transform) {
+                    console.warn("No table HTML content found in localStorage for this user.");
+                     document.getElementById('table').innerHTML = `<h2>No result data found for profile "${profileName || 'Unknown'}" for user ${currentUsername}.</h2> <p>Please go back and compute similarity first.</p>`;
+                    return;
+                }
+
+                // Now display the table with the loaded HTML content
+                enter_virtual_chiffre();
+                display_virtual_profile(profileName);
+            }
+
+            // Listener for the 'setUser' message from the parent frame
+            window.addEventListener('message', (event) => {
+                // Optional: Origin check for security
+                // if (event.origin !== 'your-expected-origin') { return; }
+
+                if (event.data && event.data.action === 'setUser') {
+                    const receivedUsername = event.data.username;
+                    console.log(`result_similar.js received user message: ${receivedUsername}`);
+
+                    // Set username and initialize *only if* it's new or wasn't set
+                    if (!currentUsername || currentUsername !== receivedUsername) {
+                        currentUsername = receivedUsername;
+                        console.log(`Username set to: ${currentUsername}. Initializing page...`);
+                        initializePageVirtual(); // Trigger loading and display
+                    } else {
+                         console.log(`User ${currentUsername} already set. Re-initializing page.`);
+                         // Re-initialize to ensure data is fresh if user navigates back and forth
+                         initializePageVirtual();
+                    }
+                }
+            });
         function cleanProfileName(name) {
             // Replace unwanted characters " and \ with an empty string
             return name.replace(/["\\]/g, '');
@@ -109,8 +160,8 @@
         }
     }
 
-let virtualProfiles = JSON.parse(localStorage.getItem('virtualProfiles')) || {}; // Object to store saved profile
-let virtualProfilesData = JSON.parse(localStorage.getItem('virtualProfilesData')) || {};
+let virtualProfiles = {}; // Object to store saved profile
+let virtualProfilesData ={};
 function add_virtual_profile() {
     const tableBody = document.querySelector('#table table tbody');
     const formattedVirtualRows = [];
@@ -164,8 +215,8 @@ function add_virtual_profile() {
     virtualProfiles[profileName] = virtualProfiles[profileName] || {};
     virtualProfiles[profileName][virtualprofileName] = formattedVirtualRows;
 
-    localStorage.setItem('virtualProfiles', JSON.stringify(virtualProfiles));
-    localStorage.setItem('virtualProfilesData', JSON.stringify(virtualProfilesData));
+    setUserItem('virtualProfiles',virtualProfiles);
+    setUserItem('virtualProfilesData',virtualProfilesData);
 
     if (profileName) {
         display_virtual_profile(profileName);
@@ -178,7 +229,6 @@ function add_virtual_profile() {
     function display_virtual_profile(profileName){
         const virtualListContainer = document.getElementById("virtualListContainer");
             if (!profileName || profileName === "(Aucun)") {
-                alert("No profile selected.");
                 return;
             }
             if (!virtualListContainer) {
@@ -378,7 +428,7 @@ console.log(virtualProfilesData);
         });
 
         // Valeur original dans ce fichier
-        const fullRows = rows.slice(1);
+        const fullRows = data_transform.slice(1);
         console.log("Full:",fullRows);
         console.log("Fil: ",filteredRows);
         console.log("Virtual: ",virtual_Rows);
@@ -396,7 +446,6 @@ console.log(virtualProfilesData);
             newRow.push("Virtual"); // Ajouter "Real" comme dernier élément de la ligne
             return newRow;
         });
-
 
         // Ajouter "Real" à la fin de chaque ligne du orderedData
         let formattedOrderedData = orderedData.map(row => {
@@ -416,40 +465,36 @@ console.log(virtualProfilesData);
         table += `<th>Status</th>`
         table += "</tr></thead><tbody>";
 
-        fullData.forEach(row => {
-            table += "<tr>";
-            row.forEach(cell => {
-                table += `<td>${cell}</td>`;
-            });
-            table += "</tr>";
-        });
+        fullData.forEach(rowData => {
+            // Check the last element to determine the type
+            const rowType = rowData[rowData.length - 1];
+            let rowClass = ""; // Default: no extra class
+
+            if (rowType === "Virtual") {
+                rowClass = " class='virtual-row'"; // Note the space before 'class'
+            }
+
+            table += `<tr${rowClass}>`;
+
+            for (let i = 0; i < rowData.length; i++) {
+                const cellData = rowData[i];
+                table += `<td>${cellData}</td>`; // Add the table data cell
+            }
+                table += "</tr>"; // Close the table row
+});
         table += "</tbody></table></div>";
-        localStorage.setItem('table', JSON.stringify(table));
-        localStorage.setItem('profileName', JSON.stringify(profileName));
-        localStorage.setItem('fullData', JSON.stringify(fullData));
+        setUserItem('table',table);
+        setUserItem('profileName',profileName);
+        setUserItem('fullData',fullData);
 
-    let iframe = parent.document.getElementById("content");
-    if (iframe) {
-        iframe.src = 'result_virtual.html';
+        console.log("Requesting parent to load result_virtual.html");
+        window.parent.postMessage({
+            action: 'requestNavigation',
+            targetPage: 'result_virtual.html',
+            targetId: 'result_virtual' // The ID of the link in index.html's nav
+        }, '*');
 
-        // Supprimer la classe active de tous les boutons de navigation
-        let navLinks = parent.document.querySelectorAll("nav a");
-        navLinks.forEach(link => link.classList.remove("active"));
-
-        // Ajouter la classe active au bouton "Display Patients"
-        let result_virtualButton = parent.document.getElementById("result_virtual");
-        if (result_virtualButton) {
-            result_virtualButton.classList.add("active");
-        }
-
-    } else {
-        console.error("L'élément #content n'existe pas !");
     }
-    }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            display_virtual_profile(profileName);
-        });
 
     </script>
     <br>
@@ -463,10 +508,10 @@ console.log(virtualProfilesData);
     <button class="button2" onclick="delete_lignes()">Delete line
         <span class="tooltip">Delete a line from enter data</span>
     </button>
-    <button class="button2" onclick="add_virtual_profile()">Add virtual profile
+    <button class="button2" onclick="add_virtual_profile()">Save hypothesis
         <span class="tooltip">Add virtual patients to your profile</span>
     </button>
-    <button class="button2" onclick="calculer_virtual_sort()">Virtual sort
+    <button class="button2" onclick="calculer_virtual_sort()">Compute closest
         <span class="tooltip">Calculation based on entered data</span>
     </button>
 

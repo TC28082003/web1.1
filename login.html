@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Sign Up</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover-color: #0056b3;
+            --success-color: #28a745;
+            --success-bg-color: #d4edda;
+            --success-border-color: #c3e6cb;
+            --error-color: #dc3545;
+            --error-bg-color: #f8d7da;
+            --error-border-color: #f5c6cb;
+            --light-gray-color: #f8f9fa;
+            --medium-gray-color: #ced4da;
+            --dark-gray-color: #495057;
+            --text-color: #333;
+            --body-bg-color: #eef2f7; /* Light background for the page */
+            --container-bg-color: #ffffff;
+            --input-border-color: #ced4da;
+            --input-focus-border-color: var(--primary-color);
+            --input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        /* Global Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--body-bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Use 100vh for full viewport height */
+            padding: 20px; /* Add padding for smaller screens */
+        }
+
+        /* Container Styling */
+        .login-container {
+            background-color: var(--container-bg-color);
+            padding: 35px 45px; /* Slightly adjusted padding */
+            border-radius: 12px; /* Softer corners */
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            width: 100%; /* Responsive width */
+            max-width: 420px; /* Slightly wider max width */
+            text-align: center;
+            overflow: hidden; /* Hide overflow for potential animations */
+        }
+
+        .login-container h2 {
+            margin-bottom: 25px;
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.8em; /* Larger heading */
+        }
+
+        /* Form Styling */
+        form {
+            width: 100%;
+            transition: opacity 0.3s ease-in-out; /* For potential toggle effects */
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+            position: relative; /* For potential icon positioning */
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-gray-color);
+            font-size: 0.95em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px; /* More padding */
+            border: 1px solid var(--input-border-color);
+            border-radius: 8px; /* Softer corners for inputs */
+            font-size: 1em;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-color);
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        /* Add focus effect */
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--input-focus-border-color);
+            box-shadow: var(--input-focus-shadow);
+        }
+        /* Style placeholders */
+        .form-group input::placeholder {
+            color: var(--medium-gray-color);
+            opacity: 0.8;
+        }
+
+        /* Button Styling (replaces button-base definition) */
+        .button-base {
+            width: 100%;
+            padding: 12px 15px;
+            margin-top: 15px; /* Space above button */
+            font-size: 1.05em;
+            font-weight: 500;
+            color: #fff;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+            text-transform: uppercase; /* Optional: Uppercase text */
+            letter-spacing: 0.5px; /* Optional: Letter spacing */
+        }
+        .button-base:hover {
+            background-color: var(--primary-hover-color);
+        }
+        .button-base:active {
+            transform: scale(0.98); /* Slight press effect */
+        }
+
+        /* Message Styling */
+        .message {
+            margin-top: 20px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.95em;
+            border: 1px solid transparent;
+            display: none; /* Keep hidden initially */
+            text-align: left; /* Align message text left */
+            position: relative; /* For icon positioning */
+            padding-left: 40px; /* Space for icon */
+        }
+        /* Add icons using pseudo-elements */
+        .message::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 900;
+            font-size: 1.1em;
+        }
+
+
+        /* Toggle Link Styling */
+        .toggle-link {
+            margin-top: 25px;
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: none; /* Remove default underline */
+            font-weight: 500;
+            display: inline-block; /* Allows better spacing/hover */
+            transition: color 0.2s ease;
+        }
+        .toggle-link:hover {
+            color: var(--primary-hover-color);
+            text-decoration: underline; /* Underline on hover */
+        }
+
+        /* Signup Form Initial State */
+        #signupForm {
+            display: none;
+        }
+         /* Note Styling */
+         #signupForm p {
+            font-size: 0.85em;
+            color: #6c757d; /* Bootstrap muted color */
+            margin-bottom: 15px;
+         }
+    </style>
+    <!-- If using Font Awesome for icons, add the kit link here -->
+     <!-- Example: <script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script> -->
+</head>
+<body>
+    <div class="login-container">
+        <!-- Login Form -->
+        <form id="loginForm">
+            <h2>Login</h2>
+            <!-- Message div placed BEFORE inputs for better flow -->
+            <div id="loginMessage" class="message"></div>
+            <div class="form-group">
+                <label for="loginUsername">Username</label>
+                <input type="text" id="loginUsername" placeholder="Enter your username" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="button-base">Login</button>
+            <p class="toggle-link" onclick="toggleForms()">Need an account? Sign Up</p>
+        </form>
+
+        <!-- Sign Up Form -->
+        <form id="signupForm">
+            <h2>Sign Up</h2>
+            <p>(Note: This is NOT secure storage)</p>
+            <!-- Message div placed BEFORE inputs -->
+            <div id="signupMessage" class="message"></div>
+            <div class="form-group">
+                <label for="signupUsername">Username</label>
+                <input type="text" id="signupUsername" placeholder="Choose a username" required>
+            </div>
+            <div class="form-group">
+                <label for="signupPassword">Password</label>
+                <input type="password" id="signupPassword" placeholder="Create a password (min 4 chars)" required>
+                 <!-- Basic password strength message area (optional) -->
+                 <small id="passwordHelp" style="display: none; color: var(--error-color); margin-top: 5px;"></small>
+            </div>
+            <button type="submit" class="button-base">Sign Up</button>
+            <p class="toggle-link" onclick="toggleForms()">Already have an account? Login</p>
+        </form>
+    </div>
+
+    <!-- JavaScript remains largely the same, but update message display logic -->
+    <script>
+        const LS_USERS_KEY = 'appUsersSimple'; // Use a specific key
+
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const loginMessage = document.getElementById('loginMessage');
+        const signupMessage = document.getElementById('signupMessage');
+        const signupPasswordInput = document.getElementById('signupPassword');
+        const passwordHelp = document.getElementById('passwordHelp'); // Optional: for strength message
+
+        function displayMessage(element, message, isError = false) {
+            element.textContent = message;
+            // Add appropriate class based on error status
+            element.className = `message ${isError ? 'error-message' : 'success-message'}`;
+            element.style.display = 'block'; // Make it visible
+        }
+
+        function clearMessages() {
+            loginMessage.style.display = 'none';
+            loginMessage.textContent = ''; // Clear text content
+            loginMessage.className = 'message'; // Reset class
+
+            signupMessage.style.display = 'none';
+            signupMessage.textContent = '';
+            signupMessage.className = 'message';
+
+            if (passwordHelp) { // Clear password help too
+                passwordHelp.style.display = 'none';
+                passwordHelp.textContent = '';
+            }
+             // Reset password input border if it was styled for error
+             if (signupPasswordInput) {
+                 signupPasswordInput.style.borderColor = ''; // Reset to CSS default
+             }
+        }
+
+        function toggleForms() {
+            clearMessages();
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'block';
+                signupForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+            }
+        }
+
+          function simpleEncode(str) {
+            try {
+                 // Simple Base64 encoding - easily decoded
+                 return btoa(unescape(encodeURIComponent(str))); // Handle UTF-8
+            } catch (e) {
+                console.error("Encoding failed:", e);
+                // Fallback for environments where btoa might fail unexpectedly
+                 try { return btoa(str); } catch (e2) { return str; }
+            }
+        }
+        function simpleDecode(encodedStr) {
+             try {
+                  return decodeURIComponent(escape(atob(encodedStr))); // Handle UTF-8
+             } catch(e) {
+                 console.error("Decoding failed:", e);
+                 // Fallback
+                 try { return atob(encodedStr); } catch(e2) { return encodedStr; }
+             }
+        }
+        // --- End Copy from original ---
+
+          function getUsers() {
+            try {
+                const usersJson = localStorage.getItem(LS_USERS_KEY);
+                return usersJson ? JSON.parse(usersJson) : {};
+            } catch (e) {
+                console.error("Error reading users from localStorage", e);
+                return {};
+            }
+        }
+
+        function saveUsers(users) {
+            try {
+                localStorage.setItem(LS_USERS_KEY, JSON.stringify(users));
+            } catch (e) {
+                console.error("Error saving users to localStorage", e);
+                // Display error within the signup form's message area
+                displayMessage(signupMessage, "Error saving user data. Storage might be full.", true);
+            }
+        }
+        // --- End Copy from original ---
+
+
+        // --- Event Handlers ---
+        loginForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            clearMessages();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const users = getUsers();
+
+            if (!username || !password) {
+                 displayMessage(loginMessage, "Please enter both username and password.", true);
+                 return;
+            }
+
+            // Use optional chaining and check if decoded password matches
+            // Note: This assumes simpleDecode handles potential errors gracefully
+            if (users[username] && password === simpleDecode(users[username])) {
+                // --- Login Success ---
+                console.log("Login successful for:", username);
+                 displayMessage(loginMessage, "Login successful! Loading application...", false);
+                 sessionStorage.setItem('isLoggedIn', 'true');
+                 sessionStorage.setItem('loggedInUser', username);
+
+                // Notify parent window (keep '*' for local, change for production)
+                 window.parent.postMessage({ action: 'loginSuccess', username: username }, '*');
+
+                 // Optional: Disable form briefly after success
+                 loginForm.querySelector('button').disabled = true;
+
+            } else {
+                displayMessage(loginMessage, "Invalid username or password.", true);
+            }
+        });
+
+        signupForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            clearMessages();
+            const username = document.getElementById('signupUsername').value.trim();
+            const password = signupPasswordInput.value; // Get password from the input
+
+            if (!username || !password) {
+                displayMessage(signupMessage, "Username and password cannot be empty.", true);
+                return;
+            }
+
+             // Basic password strength check (update message display)
+             if (password.length < 4) {
+                 // Display message specifically for password help
+                 if (passwordHelp) {
+                     passwordHelp.textContent = "Password should be at least 4 characters.";
+                     passwordHelp.style.display = 'block';
+                      signupPasswordInput.style.borderColor = 'var(--error-color)'; // Highlight input border
+                 } else {
+                      // Fallback if help element doesn't exist
+                      displayMessage(signupMessage, "Password should be at least 4 characters.", true);
+                 }
+                  return;
+             }
+
+            const users = getUsers();
+
+            if (users[username]) {
+                displayMessage(signupMessage, "Username already exists. Please choose another or login.", true);
+            } else {
+                 // --- Sign Up Success ---
+                 users[username] = simpleEncode(password);
+                 saveUsers(users); // Handles potential save errors internally
+
+                 // Check if save was successful (e.g., by seeing if an error message was displayed)
+                 if (signupMessage.style.display !== 'block' || !signupMessage.classList.contains('error-message')) {
+                    displayMessage(signupMessage, "Sign up successful! You can now log in.", false);
+                    // Optional: Disable form briefly
+                    signupForm.querySelector('button').disabled = true;
+                    setTimeout(() => {
+                        toggleForms();
+                        // Re-enable button if needed after toggle
+                         signupForm.querySelector('button').disabled = false;
+                         loginForm.querySelector('button').disabled = false;
+                    }, 1500); // Switch after 1.5 seconds
+                 }
+            }
+        });
+        clearMessages();
+    </script>
+</body>
+</html>
